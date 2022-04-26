@@ -43,6 +43,11 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT count(t2.sales_organization_id) as subordinates_count, t1.id 
+        FROM enterprise_sales_enterprise_customers t2 right join
+             organizations t1
+             on  t1.id =t2.sales_organization_id 
+        Group by t1.id ORDER BY t1.id;
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
@@ -88,6 +93,8 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT id, ST_X(ST_Centroid(bounds)) as longitude,  ST_Y(ST_Centroid(bounds)) as latitude
+        FROM japan_segments ;
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
@@ -155,6 +162,35 @@ class TestExample(DbTest):
         )
 
         sql = """
+        ALTER TABLE  japan_segments add  COLUMN geom geometry(Geometry,4326);
+        UPDATE japan_segments SET geom = ST_SetSRID(ST_GeomFromGeoJSON('
+        {"type":"Polygon",
+        "coordinates":[
+          [
+            [
+              130.27313232421875,
+              30.519681272749402
+            ],
+            [
+              131.02020263671875,
+              30.519681272749402
+            ],
+            [
+              131.02020263671875,
+              30.80909017893796
+            ],
+            [
+              130.27313232421875,
+              30.80909017893796
+            ],
+            [
+              130.27313232421875,
+              30.519681272749402
+            ]
+          ]
+        ]
+        }'), 4326);
+        SELECT id from japan_segments WHERE ST_Within(bounds, geom);
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
